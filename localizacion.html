@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Mashup — Unidad 3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   TOKENS — dark (default)
+══════════════════════════════════════════ */
+:root {
+  --transition-theme: background .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease;
+
+  --geo: #00d4ff;
+  --geo-dim: rgba(0,212,255,.1);
+  --reddit: #ff5722;
+  --meli: #ffcc00;
+  --meli-dim: rgba(255,204,0,.08);
+  --db: #00e5a0;
+  --db-dim: rgba(0,229,160,.1);
+  --sms: #c084fc;
+  --yt: #ff2e55;
+  --fb: #60a5fa;
+  --sp: #1ed760;
+
+  --r: 20px;
+  --rinner: 14px;
+  --fh: 'Syne', sans-serif;
+  --fb2: 'DM Sans', sans-serif;
+  --fm: 'JetBrains Mono', monospace;
+}
+
+/* ── DARK THEME ── */
+[data-theme="dark"] {
+  --bg:      #080b12;
+  --bg2:     #0d1117;
+  --bg3:     #111720;
+  --surface: rgba(255,255,255,.038);
+  --surface2:rgba(255,255,255,.06);
+  --border:  rgba(255,255,255,.07);
+  --border2: rgba(255,255,255,.12);
+  --text:    #e8ecf5;
+  --text2:   #fff;
+  --muted:   #4e5a6e;
+  --muted2:  #8492a6;
+
+  --orb1-color: rgba(0,212,255,.08);
+  --orb2-color: rgba(192,132,252,.07);
+  --orb3-color: rgba(0,229,160,.06);
+  --grid-line:  rgba(255,255,255,.012);
+  /* FIX: drastically reduced noise opacity */
+  --noise-op:   .008;
+
+  --card-base-bg: rgba(255,255,255,.038);
+  --card-top:     rgba(255,255,255,.1);
+  --card-hover-border: rgba(255,255,255,.14);
+
+  --inp-bg:   rgba(255,255,255,.04);
+  --inp-bdr:  rgba(255,255,255,.09);
+  --inp-focus-bg:  rgba(255,255,255,.06);
+  --inp-focus-bdr: rgba(255,255,255,.22);
+
+  --toast-bg: rgba(13,17,23,.95);
+  --toast-bdr: rgba(255,255,255,.1);
+
+  --toggle-bg: rgba(255,255,255,.06);
+  --toggle-bdr: rgba(255,255,255,.12);
+
+  --reddit-card-bg: rgba(255,255,255,.03);
+  --fb-post-bg:     rgba(255,255,255,.025);
+  --db-bdr:  rgba(255,255,255,.05);
+  --meli-stat-bg:   rgba(255,226,52,.04);
+  --meli-item-bg:   rgba(255,255,255,.025);
+  --np-bg:   rgba(30,215,96,.06);
+  --np-bdr:  rgba(30,215,96,.14);
+  --fb-profile-bg: rgba(96,165,250,.05);
+  --fb-profile-bdr:rgba(96,165,250,.12);
+}
+
+/* ── LIGHT THEME ── */
+[data-theme="light"] {
+  --bg:      #f0f4fa;
+  --bg2:     #e8edf5;
+  --bg3:     #dde4ef;
+  --surface: rgba(255,255,255,.75);
+  --surface2:rgba(255,255,255,.9);
+  --border:  rgba(0,0,0,.09);
+  --border2: rgba(0,0,0,.14);
+  --text:    #1a2235;
+  --text2:   #0d1117;
+  --muted:   #8899aa;
+  --muted2:  #5a6a7e;
+
+  --orb1-color: rgba(0,180,220,.05);
+  --orb2-color: rgba(160,100,240,.04);
+  --orb3-color: rgba(0,200,140,.04);
+  --grid-line:  rgba(0,0,0,.03);
+  /* FIX: very subtle noise for light mode */
+  --noise-op:   .004;
+
+  --card-base-bg: rgba(255,255,255,.82);
+  --card-top:     rgba(0,0,0,.05);
+  --card-hover-border: rgba(0,0,0,.18);
+
+  --inp-bg:   rgba(0,0,0,.03);
+  --inp-bdr:  rgba(0,0,0,.1);
+  --inp-focus-bg:  rgba(0,0,0,.05);
+  --inp-focus-bdr: rgba(0,0,0,.22);
+
+  --toast-bg: rgba(255,255,255,.97);
+  --toast-bdr: rgba(0,0,0,.12);
+
+  --toggle-bg: rgba(0,0,0,.05);
+  --toggle-bdr: rgba(0,0,0,.12);
+
+  --reddit-card-bg: rgba(0,0,0,.025);
+  --fb-post-bg:     rgba(0,0,0,.02);
+  --db-bdr:  rgba(0,0,0,.06);
+  --meli-stat-bg:   rgba(255,204,0,.06);
+  --meli-item-bg:   rgba(255,255,255,.9);
+  --np-bg:   rgba(30,215,96,.05);
+  --np-bdr:  rgba(30,215,96,.18);
+  --fb-profile-bg: rgba(96,165,250,.07);
+  --fb-profile-bdr:rgba(96,165,250,.2);
+}
+
+/* ════════════════════════════════════════
+   BASE
+════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--fb2);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: var(--transition-theme);
+}
+
+/* FIX: noise z-index lowered to 1 (was 9999 which blocked clicks) 
+   and opacity uses CSS variable so it's theme-aware and subtle */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--noise-op);
+  pointer-events: none;
+  /* FIX: was z-index:9999, now 1 so it doesn't cover UI */
+  z-index: 1;
+}
+
+/* FIX: orb opacity reduced from .5 to .2 */
+.orb { position: fixed; border-radius: 50%; filter: blur(120px); opacity: .2; pointer-events: none; z-index: 0; animation: orb-drift 20s ease-in-out infinite; }
+.orb1 { width: 600px; height: 600px; background: radial-gradient(circle, var(--orb1-color), transparent 70%); top: -200px; left: -100px; animation-delay: 0s; }
+.orb2 { width: 500px; height: 500px; background: radial-gradient(circle, var(--orb2-color), transparent 70%); bottom: -100px; right: 0; animation-delay: -8s; }
+.orb3 { width: 400px; height: 400px; background: radial-gradient(circle, var(--orb3-color), transparent 70%); top: 40%; left: 50%; animation-delay: -15s; }
+@keyframes orb-drift { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-40px) scale(1.07)} 66%{transform:translate(-20px,25px) scale(.93)} }
+
+/* GRID BG */
+.grid-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+}
+
+/* ════════════════════════════════════════
+   THEME TOGGLE BUTTON
+════════════════════════════════════════ */
+#theme-toggle {
+  position: fixed;
+  top: 1rem; right: 1rem;
+  /* FIX: z-index raised to ensure it's above noise layer */
+  z-index: 1000;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: var(--toggle-bg);
+  border: 1px solid var(--toggle-bdr);
+  backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,.25);
+  transition: transform .2s, filter .2s, background .3s, border-color .3s;
+  -webkit-tap-highlight-color: transparent;
+}
+#theme-toggle:hover { transform: scale(1.1) rotate(15deg); filter: brightness(1.15); }
+#theme-toggle:active { transform: scale(.93); }
+
+/* ════════════════════════════════════════
+   HEADER
+════════════════════════════════════════ */
+header {
+  position: relative; z-index: 10;
+  padding: 2.5rem 1rem 2rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition-theme);
+}
+@media (min-width: 640px) {
+  header { padding: 4.5rem 1.5rem 3.5rem; }
+}
+
+.unit-tag {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--fm); font-size: .56rem; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--geo); background: var(--geo-dim);
+  border: 1px solid rgba(0,212,255,.2);
+  border-radius: 999px; padding: .28rem .9rem;
+  margin-bottom: 1rem;
+  animation: fade-up .5s ease both;
+}
+@media (min-width: 480px) {
+  .unit-tag { font-size: .68rem; padding: .35rem 1.2rem; margin-bottom: 1.75rem; letter-spacing: .2em; gap: .5rem; }
+}
+.unit-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--geo); animation: pulse 2s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.5)} }
+
+h1 {
+  font-family: var(--fh);
+  /* "DASHBOARD" = 9 chars. At letter-spacing -.02em each char ≈ 0.6em wide.
+     Total ≈ 9 × 0.6 = 5.4em. To fill 90vw: font-size = 90vw / 5.4 ≈ 16.7vw.
+     Use 16vw fluid, min 1.6rem so it never looks tiny, max 4.5rem desktop. */
+  font-size: clamp(1.6rem, 16vw, 4.5rem);
+  font-weight: 800; line-height: .92; letter-spacing: -.02em;
+  animation: fade-up .6s .08s ease both;
+  /* prevent overflow on very narrow screens */
+  max-width: 100%;
+  word-break: break-word;
+}
+h1 .word1 { background: linear-gradient(135deg, #fff 0%, #c4d0e3 60%, var(--geo) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+[data-theme="light"] h1 .word1 { background: linear-gradient(135deg, #1a2235 0%, #334155 60%, var(--geo) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+h1 .word2 { background: linear-gradient(135deg, var(--meli), #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.subtitle { font-size: .75rem; color: var(--muted2); margin-top: .65rem; font-weight: 300; letter-spacing: .03em; animation: fade-up .6s .16s ease both; }
+@media (min-width: 480px) { .subtitle { font-size: .85rem; margin-top: 1rem; letter-spacing: .04em; } }
+
+.pill-row { display: flex; justify-content: center; flex-wrap: wrap; gap: .3rem; margin-top: 1rem; animation: fade-up .6s .24s ease both; }
+.pill {
+  display: inline-flex; align-items: center; gap: .28rem;
+  font-family: var(--fm); font-size: .52rem; font-weight: 500;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: .22rem .65rem; border-radius: 999px; border: 1px solid;
+  backdrop-filter: blur(12px);
+  transition: transform .2s, filter .2s;
+}
+@media (min-width: 480px) {
+  .pill { font-size: .6rem; padding: .3rem .8rem; gap: .35rem; letter-spacing: .08em; }
+  .pill-row { gap: .4rem; margin-top: 1.5rem; }
+}
+.pill:hover { transform: translateY(-2px); filter: brightness(1.2); }
+.pill-geo  { color: var(--geo);  border-color: rgba(0,212,255,.25);  background: rgba(0,212,255,.06); }
+.pill-meli { color: var(--meli); border-color: rgba(255,204,0,.25);   background: rgba(255,204,0,.05); }
+.pill-sp   { color: var(--sp);   border-color: rgba(30,215,96,.25);  background: rgba(30,215,96,.05); }
+.pill-yt   { color: var(--yt);   border-color: rgba(255,46,85,.25);  background: rgba(255,46,85,.05); }
+.pill-fb   { color: var(--fb);   border-color: rgba(96,165,250,.25); background: rgba(96,165,250,.05); }
+
+@keyframes fade-up { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+/* ════════════════════════════════════════
+   LAYOUT
+════════════════════════════════════════ */
+/* FIX: wrap z-index raised above noise layer */
+.wrap { position: relative; z-index: 10; max-width: 1480px; margin: 0 auto; padding: 2rem 1rem; }
+
+.section-label { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+.section-label-text { font-family: var(--fm); font-size: .63rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.section-label-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+/* ── RESPONSIVE GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+@media (min-width: 640px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); } }
+
+/* ════════════════════════════════════════
+   CARD — z-index above noise
+════════════════════════════════════════ */
+.card {
+  position: relative;
+  /* FIX: z-index: 2 ensures cards render above the noise overlay */
+  z-index: 2;
+  background: var(--card-base-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.4rem 1.25rem;
+  backdrop-filter: blur(30px);
+  overflow: hidden;
+  transition: transform .4s cubic-bezier(.2,1,.3,1), border-color .3s, box-shadow .4s, background .35s;
+  animation: card-in .5s ease both;
+  will-change: transform;
+}
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--card-accent, rgba(255,255,255,.1)); }
+.card::after { content: ''; position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; background: radial-gradient(circle, var(--card-glow, rgba(255,255,255,.02)), transparent 70%); pointer-events: none; }
+.card:hover { transform: translateY(-4px) scale(1.003); border-color: var(--card-hover, rgba(255,255,255,.14)); box-shadow: 0 20px 50px rgba(0,0,0,.35), 0 0 0 1px var(--card-hover, rgba(255,255,255,.06)); }
+@media (max-width: 639px) { .card:hover { transform: none; } .card:active { transform: scale(.98); } }
+@keyframes card-in { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.1s}.card:nth-child(3){animation-delay:.15s}.card:nth-child(4){animation-delay:.2s}.card:nth-child(5){animation-delay:.25s}.card:nth-child(6){animation-delay:.3s}.card:nth-child(7){animation-delay:.35s}
+
+.c-geo    { --card-accent: linear-gradient(90deg,var(--geo),#818cf8);   --card-glow: rgba(0,212,255,.12);  --card-hover: rgba(0,212,255,.28); }
+.c-reddit { --card-accent: linear-gradient(90deg,var(--reddit),#fbbf24); --card-glow: rgba(255,87,34,.1);   --card-hover: rgba(255,87,34,.28); }
+.c-meli   { --card-accent: linear-gradient(90deg,var(--meli),#f97316);   --card-glow: rgba(255,204,0,.1);   --card-hover: rgba(255,204,0,.32); }
+.c-db     { --card-accent: linear-gradient(90deg,var(--db),var(--geo));  --card-glow: rgba(0,229,160,.1);   --card-hover: rgba(0,229,160,.28); }
+.c-sms    { --card-accent: linear-gradient(90deg,var(--sms),#60a5fa);    --card-glow: rgba(192,132,252,.1); --card-hover: rgba(192,132,252,.28); }
+.c-yt     { --card-accent: linear-gradient(90deg,var(--yt),#f97316);     --card-glow: rgba(255,46,85,.1);   --card-hover: rgba(255,46,85,.28); }
+.c-fb     { --card-accent: linear-gradient(90deg,var(--fb),#818cf8);     --card-glow: rgba(96,165,250,.1);  --card-hover: rgba(96,165,250,.28); }
+.c-sp     { --card-accent: linear-gradient(90deg,var(--sp),var(--geo));  --card-glow: rgba(30,215,96,.12);  --card-hover: rgba(30,215,96,.28); }
+
+/* ════════════════════════════════════════
+   CARD HEAD
+════════════════════════════════════════ */
+.card-head { display: flex; align-items: center; gap: .9rem; margin-bottom: 1.25rem; }
+.card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border2); transition: background .35s, border-color .35s; }
+.card-title { font-family: var(--fh); font-size: 1.2rem; font-weight: 700; letter-spacing: .05em; line-height: 1; color: var(--text2); }
+.card-sub   { font-size: .6rem; color: var(--muted2); margin-top: 4px; font-family: var(--fm); letter-spacing: .05em; }
+
+/* ════════════════════════════════════════
+   INPUTS
+════════════════════════════════════════ */
+.inp {
+  width: 100%;
+  background: var(--inp-bg);
+  border: 1px solid var(--inp-bdr);
+  border-radius: 12px;
+  padding: .72rem 1rem;
+  color: var(--text);
+  font-family: var(--fb2);
+  font-size: .9rem;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background .35s, color .35s;
+  -webkit-appearance: none;
+  /* FIX: relative positioning and z-index to ensure inputs are clickable */
+  position: relative;
+  z-index: 3;
+}
+.inp::placeholder { color: var(--muted); }
+.inp:focus { border-color: var(--inp-focus-bdr); background: var(--inp-focus-bg); box-shadow: 0 0 0 3px rgba(255,255,255,.04); }
+[data-theme="light"] .inp:focus { box-shadow: 0 0 0 3px rgba(0,0,0,.04); }
+.inp.ok { border-color: rgba(0,229,160,.55) !important; }
+.inp.er { border-color: rgba(255,46,85,.55) !important; }
+
+/* ════════════════════════════════════════
+   BUTTONS — z-index ensures clickability
+════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+  padding: .72rem 1.2rem;
+  border-radius: 12px;
+  font-family: var(--fb2); font-size: .85rem; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: filter .2s, transform .2s;
+  white-space: nowrap; letter-spacing: .01em;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
+  position: relative;
+  z-index: 3;
+}
+.btn:hover  { filter: brightness(1.15); transform: translateY(-2px); }
+.btn:active { transform: scale(.97); }
+@media (max-width: 639px) { .btn:hover { transform: none; filter: none; } }
+
+.btn-geo    { background: var(--geo);    color: #000; }
+.btn-reddit { background: var(--reddit); color: #fff; }
+.btn-meli   { background: var(--meli);   color: #1a1400; font-weight: 700; }
+.btn-db     { background: var(--db);     color: #000; }
+.btn-sms    { background: var(--sms);    color: #fff; }
+.btn-yt     { background: var(--yt);     color: #fff; }
+.btn-fb     { background: var(--fb);     color: #000; }
+.btn-sp     { background: var(--sp);     color: #000; }
+
+/* ════════════════════════════════════════
+   BADGES
+════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: .22rem;
+  padding: .22rem .65rem; border-radius: 999px;
+  font-size: .62rem; font-weight: 600; font-family: var(--fm); letter-spacing: .07em; border: 1px solid;
+}
+.b-ok   { background: rgba(0,229,160,.1);  color: #00e5a0; border-color: rgba(0,229,160,.22); }
+.b-err  { background: rgba(255,46,85,.1);  color: #ff6b8a; border-color: rgba(255,46,85,.22); }
+.b-warn { background: rgba(251,191,36,.1); color: #fbbf24; border-color: rgba(251,191,36,.22); }
+.b-info { background: rgba(0,212,255,.1);  color: #00d4ff; border-color: rgba(0,212,255,.22); }
+.b-meli { background: rgba(255,204,0,.1);  color: #ffcc00; border-color: rgba(255,204,0,.22); }
+.b-sp   { background: rgba(30,215,96,.1);  color: #1ed760; border-color: rgba(30,215,96,.22); }
+.b-fb   { background: rgba(96,165,250,.1); color: #93c5fd; border-color: rgba(96,165,250,.22); }
+
+/* ════════════════════════════════════════
+   INFO ROWS
+════════════════════════════════════════ */
+.ir { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px solid var(--db-bdr); font-size: .83rem; }
+.ir:last-child { border: none; }
+.il { color: var(--muted); font-family: var(--fm); font-size: .67rem; letter-spacing: .06em; }
+.iv { color: var(--text); font-weight: 500; font-family: var(--fm); }
+
+/* SPINNER */
+.spin { display: inline-block; width: 15px; height: 15px; border: 1.5px solid rgba(128,128,128,.2); border-top-color: currentColor; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ════════════════════════════════════════
+   MAP
+════════════════════════════════════════ */
+#map { height: 200px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: .75rem; position: relative; z-index: 3; }
+@media (min-width: 640px) { #map { height: 220px; } }
+
+/* ════════════════════════════════════════
+   YOUTUBE
+════════════════════════════════════════ */
+#video-container iframe { width: 100%; height: 200px; border-radius: 14px; border: none; }
+@media (min-width: 640px) { #video-container iframe { height: 215px; } }
+.yt-placeholder {
+  height: 200px; border-radius: 14px;
+  background: var(--inp-bg); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: .6rem;
+  color: var(--muted); font-size: .78rem;
+}
+#yt-title-box { display: none; background: rgba(255,46,85,.07); border: 1px solid rgba(255,46,85,.18); border-radius: 12px; padding: .7rem 1rem; margin: .75rem 0; }
+.yt-now-label { font-family: var(--fm); font-size: .6rem; color: var(--yt); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .25rem; }
+.yt-now-title { font-size: .87rem; color: var(--text); font-weight: 500; line-height: 1.4; }
+#yt-validation { font-size: .68rem; min-height: 1rem; margin-top: .35rem; font-family: var(--fm); }
+#yt-validation.ok { color: #00e5a0; }
+#yt-validation.er { color: #ff6b8a; }
+
+/* ════════════════════════════════════════
+   REDDIT
+════════════════════════════════════════ */
+.reddit-card {
+  background: var(--reddit-card-bg); border: 1px solid var(--border); border-radius: 14px;
+  padding: .9rem; margin-top: .65rem; font-size: .82rem;
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.reddit-card:hover { background: rgba(255,87,34,.05); border-color: rgba(255,87,34,.2); transform: translateX(3px); }
+.r-sub    { font-family: var(--fm); font-size: .64rem; color: var(--reddit); letter-spacing: .05em; }
+.r-author { font-size: .67rem; color: var(--muted); margin-top: .1rem; }
+.r-title  { color: var(--text); line-height: 1.5; margin-top: .4rem; }
+.r-stats  { display: flex; gap: .9rem; margin-top: .5rem; font-size: .68rem; color: var(--muted2); font-family: var(--fm); }
+
+/* ════════════════════════════════════════
+   DATABASE
+════════════════════════════════════════ */
+.db-entry { display: flex; justify-content: space-between; align-items: center; padding: .5rem 0; border-bottom: 1px solid var(--db-bdr); font-size: .8rem; }
+.db-entry:last-child { border: none; }
+.db-name  { color: var(--text); font-weight: 500; }
+.db-meta  { color: var(--muted); font-size: .69rem; margin-top: .1rem; }
+
+/* ════════════════════════════════════════
+   SMS
+════════════════════════════════════════ */
+.sms-entry { display: flex; gap: .75rem; padding: .55rem 0; border-bottom: 1px solid var(--db-bdr); font-size: .8rem; }
+.sms-entry:last-child { border: none; }
+.sms-time { font-family: var(--fm); font-size: .64rem; color: var(--muted); white-space: nowrap; }
+.sms-msg  { color: var(--text); flex: 1; }
+
+/* ════════════════════════════════════════
+   MERCADO LIBRE
+════════════════════════════════════════ */
+.meli-stats { display: flex; gap: .6rem; margin-bottom: 1rem; }
+.meli-stat  { flex: 1; text-align: center; background: var(--meli-stat-bg); border: 1px solid rgba(255,204,0,.12); border-radius: 12px; padding: .5rem; }
+.meli-stat-n { font-family: var(--fh); font-size: 1.1rem; font-weight: 700; color: var(--meli); letter-spacing: .04em; }
+.meli-stat-l { font-size: .58rem; color: var(--muted); font-family: var(--fm); letter-spacing: .04em; margin-top: .1rem; }
+
+.meli-chips { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .75rem; }
+.meli-chip {
+  font-family: var(--fm); font-size: .62rem; font-weight: 600;
+  padding: .28rem .7rem; border-radius: 999px; cursor: pointer;
+  background: rgba(255,204,0,.06); border: 1px solid rgba(255,204,0,.16); color: var(--meli);
+  transition: all .18s; letter-spacing: .04em;
+  -webkit-tap-highlight-color: transparent;
+  position: relative; z-index: 3;
+}
+.meli-chip:hover, .meli-chip:active { background: rgba(255,204,0,.16); border-color: var(--meli); transform: translateY(-2px); }
+
+.meli-list { display: flex; flex-direction: column; gap: .4rem; max-height: 400px; overflow-y: auto; padding-right: 2px; }
+.meli-list::-webkit-scrollbar { width: 3px; }
+.meli-list::-webkit-scrollbar-thumb { background: rgba(255,204,0,.2); border-radius: 3px; }
+
+.meli-item {
+  display: flex; gap: .7rem; align-items: center;
+  background: var(--meli-item-bg); border: 1px solid var(--border); border-radius: 14px; padding: .7rem;
+  text-decoration: none; transition: all .2s;
+}
+.meli-item:hover, .meli-item:active { background: rgba(255,204,0,.06); border-color: rgba(255,204,0,.22); transform: translateX(4px); }
+.meli-img  { width: 60px; height: 60px; border-radius: 10px; flex-shrink: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; overflow: hidden; }
+.meli-img img { width: 60px; height: 60px; object-fit: contain; padding: 4px; }
+.meli-info { flex: 1; min-width: 0; }
+.meli-title { font-size: .75rem; font-weight: 500; color: var(--text); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: .22rem; }
+.meli-price { font-family: var(--fh); font-size: .95rem; font-weight: 700; color: var(--meli); letter-spacing: .04em; }
+.meli-orig  { font-size: .63rem; color: var(--muted); text-decoration: line-through; margin-left: .3rem; }
+.meli-disc  { font-size: .56rem; font-weight: 700; font-family: var(--fm); background: rgba(0,229,160,.14); color: #00e5a0; border-radius: 5px; padding: .1rem .3rem; margin-left: .3rem; }
+.meli-meta  { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; margin-top: .2rem; }
+.meli-free  { font-size: .6rem; color: #00e5a0; font-family: var(--fm); }
+.meli-sold  { font-size: .6rem; color: var(--muted); font-family: var(--fm); }
+.meli-new   { font-size: .55rem; font-weight: 700; font-family: var(--fm); background: rgba(0,212,255,.1); color: #00d4ff; border-radius: 5px; padding: .1rem .3rem; }
+.meli-used  { font-size: .55rem; font-weight: 700; font-family: var(--fm); background: rgba(251,191,36,.1); color: #fbbf24; border-radius: 5px; padding: .1rem .3rem; }
+.meli-empty { text-align: center; padding: 2rem 1rem; color: var(--muted); }
+.meli-empty-icon { font-size: 2.2rem; margin-bottom: .5rem; opacity: .35; }
+#meli-status { font-size: .68rem; min-height: 1rem; margin-bottom: .5rem; font-family: var(--fm); display: flex; align-items: center; gap: .4rem; }
+
+/* ════════════════════════════════════════
+   SPOTIFY
+════════════════════════════════════════ */
+.sp-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 768px) {
+  .sp-inner { grid-template-columns: 1fr 1fr; }
+  .c-sp { grid-column: span 2; }
+}
+@media (min-width: 1024px) { .c-sp { grid-column: span 2; } }
+@media (min-width: 1200px) { .c-sp { grid-column: span 2; } }
+
+.now-playing { background: var(--np-bg); border: 1px solid var(--np-bdr); border-radius: 16px; padding: 1rem; margin-bottom: 1rem; transition: background .35s, border-color .35s; }
+.np-header { display: flex; align-items: center; gap: .5rem; font-family: var(--fm); font-size: .62rem; font-weight: 600; color: var(--sp); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .85rem; }
+
+.eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.eq span { width: 3px; background: var(--sp); border-radius: 1px; animation: eq-anim .8s ease-in-out infinite; }
+.eq span:nth-child(1){animation-delay:0s}.eq span:nth-child(2){animation-delay:.15s}.eq span:nth-child(3){animation-delay:.3s}.eq span:nth-child(4){animation-delay:.45s}
+@keyframes eq-anim { 0%,100%{height:3px} 50%{height:12px} }
+.eq.paused span { animation-play-state: paused; height: 3px !important; }
+
+.np-body  { display: flex; gap: .9rem; align-items: center; }
+.np-cover { width: 58px; height: 58px; border-radius: 12px; flex-shrink: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 1.7rem; overflow: hidden; border: 1px solid var(--border2); }
+.np-cover img { width: 58px; height: 58px; object-fit: cover; border-radius: 12px; }
+.np-track  { font-weight: 600; font-size: .9rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-artist { font-size: .74rem; color: var(--muted2); margin-top: .15rem; }
+.np-album  { font-size: .63rem; color: var(--sp); margin-top: .05rem; font-family: var(--fm); }
+
+.progress-bar { height: 3px; background: var(--inp-bg); border-radius: 999px; margin-top: .75rem; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--sp); border-radius: 999px; transition: width .5s linear; }
+.progress-times { display: flex; justify-content: space-between; font-size: .62rem; color: var(--muted); margin-top: .2rem; font-family: var(--fm); }
+
+.controls { display: flex; align-items: center; justify-content: center; gap: 1.2rem; margin-top: .75rem; }
+.ctrl-btn { background: none; border: none; color: var(--muted2); font-size: 1.1rem; cursor: pointer; transition: color .2s, transform .2s; padding: 4px; border-radius: 50%; min-width: 36px; min-height: 36px; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; position: relative; z-index: 3; }
+.ctrl-btn:hover, .ctrl-btn:active { color: var(--text2); transform: scale(1.15); }
+.ctrl-play { background: var(--sp); color: #000; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .95rem; border: none; }
+.ctrl-play:hover { filter: brightness(1.1); transform: scale(1.08); }
+
+.volume-row { display: flex; align-items: center; gap: .5rem; margin-top: .55rem; }
+.vol-icon   { font-size: .8rem; color: var(--muted2); }
+input[type=range] { flex: 1; accent-color: var(--sp); cursor: pointer; height: 4px; position: relative; z-index: 3; }
+
+#sp-msg { font-size: .68rem; min-height: 1rem; margin-top: .3rem; font-family: var(--fm); }
+
+.sp-track-card {
+  display: flex; gap: .7rem; align-items: center;
+  background: rgba(30,215,96,.04); border: 1px solid rgba(30,215,96,.1); border-radius: 12px; padding: .65rem;
+  margin-top: .4rem; cursor: pointer; transition: all .2s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative; z-index: 3;
+}
+.sp-track-card:hover, .sp-track-card:active { background: rgba(30,215,96,.1); border-color: rgba(30,215,96,.26); transform: translateX(3px); }
+.sp-track-card.active { background: rgba(30,215,96,.14); border-color: rgba(30,215,96,.4); }
+
+.sp-cover { width: 42px; height: 42px; border-radius: 8px; flex-shrink: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; overflow: hidden; }
+.sp-cover img { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; }
+.sp-tname   { font-size: .8rem; font-weight: 600; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-tartist { font-size: .68rem; color: var(--muted2); margin-top: .1rem; }
+.sp-preview    { font-size: .56rem; font-family: var(--fm); color: #00e5a0; background: rgba(0,229,160,.09); border: 1px solid rgba(0,229,160,.18); border-radius: 5px; padding: .1rem .3rem; margin-top: .12rem; display: inline-block; }
+.sp-no-preview { font-size: .56rem; font-family: var(--fm); color: var(--muted); background: var(--inp-bg); border: 1px solid var(--border); border-radius: 5px; padding: .1rem .3rem; margin-top: .12rem; display: inline-block; }
+
+#sp-results { max-height: 320px; overflow-y: auto; padding-right: 2px; }
+#sp-results::-webkit-scrollbar { width: 3px; }
+#sp-results::-webkit-scrollbar-thumb { background: rgba(30,215,96,.2); border-radius: 3px; }
+
+.m-ok   { color: #00e5a0; }
+.m-err  { color: #ff6b8a; }
+.m-info { color: var(--muted2); }
+
+/* ════════════════════════════════════════
+   FACEBOOK
+════════════════════════════════════════ */
+.fb-profile {
+  display: flex; align-items: center; gap: .9rem;
+  background: var(--fb-profile-bg); border: 1px solid var(--fb-profile-bdr);
+  border-radius: 14px; padding: .9rem; margin-bottom: 1rem;
+  transition: background .35s, border-color .35s;
+}
+.fb-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#60a5fa,#818cf8); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.fb-name   { font-weight: 600; color: var(--text2); font-size: .88rem; }
+.fb-handle { font-size: .64rem; color: var(--muted2); font-family: var(--fm); margin-top: .1rem; }
+.fb-post { background: var(--fb-post-bg); border: 1px solid var(--border); border-radius: 14px; padding: .9rem; margin-top: .5rem; font-size: .82rem; transition: background .2s, border-color .2s; }
+.fb-post:hover { background: rgba(96,165,250,.04); border-color: rgba(96,165,250,.16); }
+.fb-post-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem; }
+.fb-post-av   { width: 30px; height: 30px; border-radius: 50%; background: rgba(96,165,250,.2); display: flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0; }
+.fb-post-name { font-weight: 600; color: #93c5fd; font-size: .8rem; }
+.fb-post-time { font-size: .62rem; color: var(--muted); font-family: var(--fm); }
+.fb-post-text { color: var(--text); line-height: 1.55; margin-bottom: .45rem; }
+.fb-post-stats { display: flex; gap: 1rem; color: var(--muted2); font-size: .68rem; font-family: var(--fm); }
+
+/* ════════════════════════════════════════
+   TOAST
+════════════════════════════════════════ */
+#toast {
+  position: fixed; bottom: 1.2rem; right: 1rem; left: 1rem;
+  background: var(--toast-bg);
+  border: 1px solid var(--toast-bdr);
+  border-radius: 16px; padding: .9rem 1.1rem;
+  font-size: .82rem;
+  /* FIX: z-index must be very high and above noise */
+  z-index: 9999;
+  transform: translateY(100px); opacity: 0;
+  transition: all .35s cubic-bezier(.2,1,.3,1);
+  max-width: 400px; margin: 0 auto;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.5);
+  border-left: 3px solid var(--toast-color, rgba(0,212,255,.6));
+  color: var(--text);
+}
+@media (min-width: 480px) { #toast { left: auto; right: 1.5rem; max-width: 300px; margin: 0; } }
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* ════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════ */
+footer {
+  position: relative; z-index: 10; text-align: center;
+  padding: 2rem 1.5rem; color: var(--muted); font-size: .63rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--fm); letter-spacing: .1em;
+  transition: var(--transition-theme);
+}
+
+/* ════════════════════════════════════════
+   LIGHT-THEME OVERRIDES
+════════════════════════════════════════ */
+[data-theme="light"] .unit-tag { background: rgba(0,212,255,.1); }
+[data-theme="light"] #toast    { box-shadow: 0 10px 30px rgba(0,0,0,.15); }
+[data-theme="light"] .orb      { opacity: .3; }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="grid-bg"></div>
+
+<!-- THEME TOGGLE -->
+<button id="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema" title="Cambiar modo claro/oscuro">☀️</button>
+
+<!-- HEADER -->
+<header>
+  <div class="unit-tag">APIs en tiempo real · Unidad 3</div>
+  <h1><span class="word1">DASH</span><span class="word2">BOARD</span></h1>
+  <p class="subtitle">7 integraciones · datos en vivo · Saltillo, Coahuila</p>
+  <div class="pill-row">
+    <span class="pill pill-geo">🌍 Geolocalización</span>
+    <span class="pill pill-meli">🛒 Mercado Libre</span>
+    <span class="pill pill-sp">🎵 iTunes</span>
+    <span class="pill pill-yt">▶ YouTube</span>
+    <span class="pill pill-fb">👤 Facebook</span>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="wrap">
+  <div class="section-label">
+    <span class="section-label-text">// 01 · APIs Originales</span>
+    <div class="section-label-line"></div>
+  </div>
+
+  <div class="grid">
+
+    <!-- GEO -->
+    <div class="card c-geo">
+      <div class="card-head">
+        <div class="card-icon">🌍</div>
+        <div>
+          <div class="card-title">GEO</div>
+          <div class="card-sub">LEAFLET + OPENSTREETMAP</div>
+        </div>
+        <span id="geo-badge" class="badge b-info" style="margin-left:auto">LISTO</span>
+      </div>
+      <div id="geo-status" style="font-size:.74rem;color:var(--muted2);margin-bottom:.75rem;font-family:var(--fm)">Presiona el botón para localizarte.</div>
+      <div id="map"></div>
+      <div id="geo-coords" style="display:none">
+        <div class="ir"><span class="il">LAT</span><span class="iv" id="geo-lat">–</span></div>
+        <div class="ir"><span class="il">LNG</span><span class="iv" id="geo-lng">–</span></div>
+        <div class="ir"><span class="il">PRECISIÓN</span><span class="iv" id="geo-acc">–</span></div>
+      </div>
+      <button class="btn btn-geo" style="margin-top:.9rem;width:100%" onclick="initGeo()">📍 Obtener ubicación</button>
+    </div>
+
+    <!-- REDDIT -->
+    <div class="card c-reddit">
+      <div class="card-head">
+        <div class="card-icon">🤖</div>
+        <div>
+          <div class="card-title">REDDIT</div>
+          <div class="card-sub">JSON API PÚBLICO</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <input id="reddit-sub" class="inp" placeholder="Subreddit (ej: mexico)" value="mexico">
+        <button class="btn btn-reddit" style="flex-shrink:0" onclick="loadReddit()">Buscar</button>
+      </div>
+      <div id="reddit-result" style="color:var(--muted2);font-size:.78rem;text-align:center;padding:1.5rem 0">Los posts aparecerán aquí.</div>
+    </div>
+
+    <!-- MERCADO LIBRE -->
+    <div class="card c-meli">
+      <div class="card-head">
+        <div class="card-icon">
+          <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+            <circle cx="16" cy="16" r="16" fill="#FFE600"/>
+            <path d="M16 6 L23 15 L16 11.5 L9 15 Z" fill="#1a1a1a"/>
+            <path d="M9 15 L16 11.5 L16 26 L9 21 Z" fill="#555"/>
+            <path d="M23 15 L16 11.5 L16 26 L23 21 Z" fill="#1a1a1a"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">MELI</div>
+          <div class="card-sub">API PÚBLICA · MÉXICO MLM</div>
+        </div>
+        <span class="badge b-meli" style="margin-left:auto" id="meli-badge">⚡ LISTO</span>
+      </div>
+      <div class="meli-stats" id="meli-stats-row" style="display:none">
+        <div class="meli-stat"><div class="meli-stat-n" id="meli-stat-total">–</div><div class="meli-stat-l">RESULTADOS</div></div>
+        <div class="meli-stat"><div class="meli-stat-n" id="meli-stat-showing">–</div><div class="meli-stat-l">MOSTRANDO</div></div>
+        <div class="meli-stat"><div class="meli-stat-n" id="meli-stat-free">–</div><div class="meli-stat-l">GRATIS</div></div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <input id="meli-query" class="inp" placeholder="Buscar en Mercado Libre…" onkeydown="if(event.key==='Enter') searchMeli()">
+        <button class="btn btn-meli" style="flex-shrink:0" onclick="searchMeli()">🔍</button>
+      </div>
+      <div class="meli-chips">
+        <span class="meli-chip" onclick="meliQuick('iPhone')">📱 iPhone</span>
+        <span class="meli-chip" onclick="meliQuick('laptop')">💻 Laptop</span>
+        <span class="meli-chip" onclick="meliQuick('audifonos')">🎧 Audio</span>
+        <span class="meli-chip" onclick="meliQuick('tenis nike')">👟 Tenis</span>
+        <span class="meli-chip" onclick="meliQuick('smart tv')">📺 Smart TV</span>
+        <span class="meli-chip" onclick="meliQuick('playstation 5')">🎮 PS5</span>
+      </div>
+      <div id="meli-status" class="m-info"></div>
+      <div class="meli-list" id="meli-list">
+        <div class="meli-empty">
+          <div class="meli-empty-icon">🛒</div>
+          <div>Busca cualquier producto</div>
+          <div style="font-size:.63rem;margin-top:.2rem;font-family:var(--fm);color:var(--muted)">PRECIOS EN MXN</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATABASE -->
+    <div class="card c-db">
+      <div class="card-head">
+        <div class="card-icon">🗄️</div>
+        <div>
+          <div class="card-title">DATABASE</div>
+          <div class="card-sub">JSONPLACEHOLDER REST API</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem">
+        <input id="db-name"  class="inp" placeholder="Nombre de usuario">
+        <input id="db-email" class="inp" placeholder="Correo electrónico">
+      </div>
+      <button class="btn btn-db" style="width:100%;margin-bottom:.9rem" onclick="saveUser()">💾 Guardar registro</button>
+      <div id="db-log"></div>
+    </div>
+
+    <!-- SMS -->
+    <div class="card c-sms">
+      <div class="card-head">
+        <div class="card-icon">💬</div>
+        <div>
+          <div class="card-title">MESSAGING</div>
+          <div class="card-sub">TWILIO-LIKE SIMULATION</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem">
+        <input id="sms-to"  class="inp" placeholder="Número destino (+52...)" value="+52 555 000 0000">
+        <input id="sms-msg" class="inp" placeholder="Escribe tu mensaje...">
+      </div>
+      <button class="btn btn-sms" style="width:100%;margin-bottom:.9rem" onclick="sendSMS()">📨 Enviar notificación</button>
+      <div id="sms-log"></div>
+    </div>
+
+    <!-- YOUTUBE -->
+    <div class="card c-yt">
+      <div class="card-head">
+        <div class="card-icon">▶️</div>
+        <div>
+          <div class="card-title">YOUTUBE</div>
+          <div class="card-sub">DATA API v3 · STREAMING</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <input id="yt-name" class="inp" placeholder="Nombre del video…" oninput="validateVideoName()" onkeydown="if(event.key==='Enter') loadVideo()">
+        <button class="btn btn-yt" style="flex-shrink:0" onclick="loadVideo()">▶</button>
+      </div>
+      <div id="yt-validation"></div>
+      <div id="yt-title-box">
+        <div class="yt-now-label">▶ REPRODUCIENDO AHORA</div>
+        <div class="yt-now-title" id="yt-title-text">–</div>
+      </div>
+      <div id="video-container" style="margin-top:.75rem">
+        <div class="yt-placeholder">
+          <span style="font-size:2.5rem">🎬</span>
+          <span style="font-family:var(--fm);font-size:.7rem;color:var(--muted)">ESCRIBE Y PRESIONA ▶</span>
+        </div>
+      </div>
+      <div id="video-info" style="display:none;margin-top:.6rem">
+        <div class="ir"><span class="il">ESTADO</span><span id="yt-status" class="iv"></span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 02 -->
+  <div class="section-label" style="margin-top:2.5rem">
+    <span class="section-label-text">// 02 · Redes Sociales</span>
+    <div class="section-label-line"></div>
+  </div>
+
+  <div class="grid" style="padding-bottom:4rem">
+
+    <!-- FACEBOOK -->
+    <div class="card c-fb">
+      <div class="card-head">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#60a5fa">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">FACEBOOK</div>
+          <div class="card-sub">GRAPH API SIMULADA</div>
+        </div>
+        <span class="badge b-fb" style="margin-left:auto">✓ VERIF.</span>
+      </div>
+      <div class="fb-profile">
+        <div class="fb-avatar">👤</div>
+        <div>
+          <div class="fb-name">Mi Página de Facebook</div>
+          <div class="fb-handle">@mipagina · 12.4k seguidores</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <input id="fb-msg" class="inp" placeholder="Escribe una publicación...">
+        <button class="btn btn-fb" style="flex-shrink:0" onclick="postFacebook()">Publicar</button>
+      </div>
+      <div id="fb-feed" style="font-size:.8rem;color:var(--muted2);text-align:center;padding:.75rem 0">Tu feed aparecerá aquí.</div>
+    </div>
+
+    <!-- SPOTIFY (wide on desktop) -->
+    <div class="card c-sp">
+      <div class="card-head">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#1ed760">
+            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">SPOTIFY</div>
+          <div class="card-sub">ITUNES API · PREVIEWS REALES 30s</div>
+        </div>
+        <span class="badge b-sp" style="margin-left:auto" id="sp-api-badge">⚡ LISTO</span>
+      </div>
+      <div class="sp-inner">
+        <div>
+          <div class="now-playing">
+            <div class="np-header">
+              <div class="eq paused" id="sp-eq"><span></span><span></span><span></span><span></span></div>
+              <span id="sp-np-status">Busca una canción</span>
+            </div>
+            <div class="np-body">
+              <div class="np-cover" id="sp-cover-wrap"><span>🎵</span></div>
+              <div style="flex:1;min-width:0">
+                <div class="np-track"  id="sp-track-name">–</div>
+                <div class="np-artist" id="sp-track-artist">–</div>
+                <div class="np-album"  id="sp-track-album"></div>
+              </div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="sp-progress" style="width:0%"></div></div>
+            <div class="progress-times"><span id="sp-elapsed">0:00</span><span id="sp-duration">0:30</span></div>
+            <div class="controls">
+              <button class="ctrl-btn" onclick="spPrev()">⏮</button>
+              <button class="ctrl-btn ctrl-play" id="sp-play-btn" onclick="spTogglePlay()">▶</button>
+              <button class="ctrl-btn" onclick="spNext()">⏭</button>
+            </div>
+            <div class="volume-row">
+              <span class="vol-icon">🔈</span>
+              <input type="range" id="sp-volume" min="0" max="1" step="0.05" value="0.8" oninput="spSetVolume(this.value)">
+              <span class="vol-icon">🔊</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem">
+            <input id="sp-query" class="inp" placeholder="Artista, canción o álbum…" onkeydown="if(event.key==='Enter') searchDeezer()">
+            <button class="btn btn-sp" style="flex-shrink:0" onclick="searchDeezer()">🔍</button>
+          </div>
+          <div id="sp-msg" class="m-info" style="margin-top:.4rem"></div>
+        </div>
+        <div id="sp-results"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>© 2025 — DASHBOARD MASHUP · UNIDAD 3 · 7 INTEGRACIONES · MERCADOLIBRE · ITUNES · REDDIT API</footer>
+<div id="toast"></div>
+<audio id="sp-audio" preload="none"></audio>
+
+<script>
+/* ════════════════════════════════════════
+   THEME
+════════════════════════════════════════ */
+(function() {
+  const saved = localStorage.getItem('dashboard-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('theme-toggle').textContent = saved === 'dark' ? '☀️' : '🌙';
+})();
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('dashboard-theme', next);
+  if (geoMap) { setTimeout(() => geoMap.invalidateSize(), 200); }
+  toast(next === 'light' ? '☀️ Modo claro activado' : '🌙 Modo oscuro activado', next === 'light' ? '#f59e0b' : 'var(--geo)');
+}
+
+/* ════════════════════════════════════════
+   UTILS
+════════════════════════════════════════ */
+function toast(msg, color = 'var(--geo)') {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.style.setProperty('--toast-color', color);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+function now() { return new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+function fmtNum(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'k' : String(n); }
+function fmtMXN(n) { return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n); }
+
+/* ════════════════════════════════════════
+   GEO
+════════════════════════════════════════ */
+let geoMap = null;
+function initGeo() {
+  const s = document.getElementById('geo-status');
+  s.innerHTML = '<span class="spin" style="color:var(--geo)"></span> Obteniendo ubicación…';
+  if (!navigator.geolocation) { s.textContent = 'No disponible.'; return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lng, accuracy } = pos.coords, acc = Math.round(accuracy);
+    document.getElementById('geo-lat').textContent = lat.toFixed(6);
+    document.getElementById('geo-lng').textContent = lng.toFixed(6);
+    document.getElementById('geo-acc').textContent = acc + ' m';
+    document.getElementById('geo-coords').style.display = 'block';
+    document.getElementById('geo-badge').textContent = '✓ OK';
+    document.getElementById('geo-badge').className = 'badge b-ok';
+    s.innerHTML = '';
+    if (!geoMap) {
+      geoMap = L.map('map').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(geoMap);
+    } else { geoMap.setView([lat, lng], 15); }
+    L.marker([lat, lng]).addTo(geoMap).bindPopup('📍 Aquí estás · ±' + acc + 'm').openPopup();
+    toast('📍 Ubicación obtenida', 'var(--geo)');
+  }, err => {
+    document.getElementById('geo-status').innerHTML = '<span style="color:#ff6b8a;font-family:var(--fm);font-size:.72rem">✗ ' + err.message + '</span>';
+  });
+}
+
+/* ════════════════════════════════════════
+   REDDIT
+════════════════════════════════════════ */
+async function loadReddit() {
+  const sub = document.getElementById('reddit-sub').value.trim() || 'mexico';
+  const c = document.getElementById('reddit-result');
+  const redditUrl = 'https://www.reddit.com/r/' + sub + '/hot.json?limit=4';
+  const strategies = [
+    async () => { const r = await fetch(redditUrl, {headers:{Accept:'application/json'}}); if(!r.ok) throw 0; return r.json(); },
+    async () => { const r = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(redditUrl)); if(!r.ok) throw 0; const b=await r.json(); if(!b.contents) throw 0; return JSON.parse(b.contents); },
+    async () => { const r = await fetch('https://corsproxy.io/?'+encodeURIComponent(redditUrl)); if(!r.ok) throw 0; return r.json(); },
+    async () => { const r = await fetch('https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(redditUrl)); if(!r.ok) throw 0; return r.json(); },
+  ];
+  let data = null;
+  for (let i = 0; i < strategies.length; i++) {
+    c.innerHTML = `<div style="text-align:center;padding:1rem"><span class="spin" style="color:var(--reddit)"></span><div style="font-family:var(--fm);font-size:.62rem;color:var(--muted2);margin-top:.4rem">Intento ${i+1}/${strategies.length}...</div></div>`;
+    try { const res = await Promise.race([strategies[i](), new Promise((_,r)=>setTimeout(()=>r(),8000))]); if(res?.data?.children){data=res;break;} } catch(e){}
+  }
+  if (!data) { c.innerHTML = '<div style="color:#ff6b8a;font-size:.76rem;text-align:center;padding:.75rem">No se pudo conectar con Reddit. Intenta con otro subreddit.</div>'; return; }
+  const posts = data.data.children;
+  if (!posts?.length) { c.innerHTML = '<div style="text-align:center;color:var(--muted2);padding:1rem;font-size:.78rem">Sin resultados para r/'+sub+'.</div>'; return; }
+  c.innerHTML = posts.map(p => {
+    const d = p.data, sc = d.score > 1000 ? (d.score/1000).toFixed(1)+'k' : d.score;
+    return `<div class="reddit-card"><div class="r-sub">r/${sub}</div><div class="r-author">u/${d.author} · ${new Date(d.created_utc*1000).toLocaleDateString('es-MX')}</div><div class="r-title">${d.title.substring(0,120)}${d.title.length>120?'…':''}</div><div class="r-stats"><span>⬆ ${sc}</span><span>💬 ${d.num_comments}</span><span>${d.domain}</span></div></div>`;
+  }).join('');
+  toast('📢 Posts cargados de r/'+sub, 'var(--reddit)');
+}
+
+/* ════════════════════════════════════════
+   MERCADO LIBRE
+════════════════════════════════════════ */
+function meliQuick(t) { document.getElementById('meli-query').value = t; searchMeli(); }
+const MELI_MOCK = {
+  iphone: [
+    { title: 'Apple iPhone 15 128GB Negro', price: 18999, original_price: 22000, condition: 'new', sold_quantity: 1842, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'Apple iPhone 14 256GB Azul', price: 15499, original_price: 18000, condition: 'new', sold_quantity: 3201, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1574755393849-623942496936?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'iPhone 13 128GB Reacondicionado', price: 9800, original_price: null, condition: 'used', sold_quantity: 540, shipping: { free_shipping: false }, thumbnail: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'iPhone 15 Pro 256GB Titanio', price: 27999, original_price: 31000, condition: 'new', sold_quantity: 985, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=120&h=120&fit=crop', permalink: '#' },
+  ],
+  laptop: [
+    { title: 'Laptop HP 15 Core i5 16GB 512GB SSD', price: 14299, original_price: 17000, condition: 'new', sold_quantity: 672, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'Dell Inspiron 15 Ryzen 5 8GB 256GB', price: 11500, original_price: 13500, condition: 'new', sold_quantity: 430, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'MacBook Air M2 8GB 256GB Plata', price: 26999, original_price: 30000, condition: 'new', sold_quantity: 318, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=120&h=120&fit=crop', permalink: '#' },
+  ],
+  audifonos: [
+    { title: 'Sony WH-1000XM5 Noise Cancelling', price: 6299, original_price: 7500, condition: 'new', sold_quantity: 921, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'Apple AirPods Pro 2da Gen MagSafe', price: 5499, original_price: 6500, condition: 'new', sold_quantity: 2100, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1603351154351-5e2d0600bb77?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'JBL Tune 510BT Bluetooth Azul', price: 899, original_price: 1299, condition: 'new', sold_quantity: 3400, shipping: { free_shipping: false }, thumbnail: 'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=120&h=120&fit=crop', permalink: '#' },
+  ],
+  smarttv: [
+    { title: 'LG 55" OLED C3 4K webOS 2024', price: 24999, original_price: 29999, condition: 'new', sold_quantity: 312, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829e1?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'Samsung 50" Crystal 4K UHD 2024', price: 11999, original_price: 14500, condition: 'new', sold_quantity: 780, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1601944179066-29b8f7e29c3f?w=120&h=120&fit=crop', permalink: '#' },
+  ],
+  playstation: [
+    { title: 'Sony PlayStation 5 Disc 825GB', price: 14999, original_price: 16999, condition: 'new', sold_quantity: 2100, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'Control DualSense PS5 Blanco', price: 1499, original_price: 1799, condition: 'new', sold_quantity: 4300, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1592840496694-26d035b52b48?w=120&h=120&fit=crop', permalink: '#' },
+  ],
+  tenis: [
+    { title: 'Nike Air Max 270 Talla 27', price: 2899, original_price: 3499, condition: 'new', sold_quantity: 1200, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&h=120&fit=crop', permalink: '#' },
+    { title: 'Adidas Ultraboost 22 Talla 26', price: 3199, original_price: 3999, condition: 'new', sold_quantity: 890, shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=120&h=120&fit=crop', permalink: '#' },
+  ],
+};
+function getMeliMock(q) {
+  const ql = q.toLowerCase();
+  for (const k of Object.keys(MELI_MOCK)) { if (ql.includes(k)) return MELI_MOCK[k]; }
+  return [{ title: 'Resultado para "'+q+'"', price: Math.floor(Math.random()*10000+500), original_price: null, condition: 'new', sold_quantity: Math.floor(Math.random()*2000+50), shipping: { free_shipping: true }, thumbnail: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=120&h=120&fit=crop', permalink: '#' }];
+}
+
+async function searchMeli() {
+  const q = document.getElementById('meli-query').value.trim();
+  const list = document.getElementById('meli-list'), status = document.getElementById('meli-status'), badge = document.getElementById('meli-badge');
+  if (!q) { status.innerHTML = '<span style="color:#ff6b8a">⚠ Escribe un producto</span>'; return; }
+  status.innerHTML = '<span class="spin" style="color:var(--meli)"></span><span style="color:var(--muted2);margin-left:.4rem">Buscando…</span>';
+  list.innerHTML = '<div class="meli-empty"><div class="meli-empty-icon">⏳</div></div>';
+  badge.textContent = '…'; badge.className = 'badge b-warn';
+  document.getElementById('meli-stats-row').style.display = 'none';
+  const meliUrl = 'https://api.mercadolibre.com/sites/MLM/search?q='+encodeURIComponent(q)+'&limit=10';
+  const strategies = [
+    async () => { const r = await fetch(meliUrl); if (!r.ok) throw 0; return r.json(); },
+    async () => { const r = await fetch('https://corsproxy.io/?'+encodeURIComponent(meliUrl)); if (!r.ok) throw 0; const b = await r.json(); return b.contents ? JSON.parse(b.contents) : b; },
+    async () => { const r = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(meliUrl)); if (!r.ok) throw 0; const b = await r.json(); if (!b.contents) throw 0; return JSON.parse(b.contents); },
+  ];
+  let data = null, n = 0;
+  for (const s of strategies) {
+    n++;
+    status.innerHTML = `<span class="spin" style="color:var(--meli)"></span><span style="color:var(--muted2);margin-left:.4rem;font-family:var(--fm);font-size:.64rem">PROXY ${n}/${strategies.length}…</span>`;
+    try { const res = await Promise.race([s(), new Promise((_,r)=>setTimeout(()=>r(),7000))]); if (res?.results !== undefined) { data = res; break; } } catch(e) {}
+  }
+  let mock = false;
+  if (!data) { mock = true; const mi = getMeliMock(q); data = { results: mi, paging: { total: mi.length * 40 } }; }
+  const items = data.results || [];
+  if (!items.length) { status.innerHTML = '<span style="color:#ff6b8a;font-family:var(--fm)">SIN RESULTADOS</span>'; list.innerHTML = '<div class="meli-empty"><div class="meli-empty-icon">🔍</div><div>Sin resultados para "'+q+'"</div></div>'; badge.textContent = 'VACÍO'; badge.className = 'badge b-warn'; return; }
+  const total = data.paging?.total || items.length, fc = items.filter(i => i.shipping?.free_shipping).length;
+  document.getElementById('meli-stat-total').textContent   = fmtNum(total);
+  document.getElementById('meli-stat-showing').textContent = items.length;
+  document.getElementById('meli-stat-free').textContent    = fc;
+  document.getElementById('meli-stats-row').style.display  = 'flex';
+  if (mock) { status.innerHTML = '<span style="color:#fbbf24;font-family:var(--fm);font-size:.64rem">⚠ MODO DEMO · red bloqueó la API</span>'; badge.textContent = '⚠ DEMO'; badge.className = 'badge b-warn'; }
+  else { status.innerHTML = '<span style="color:#00e5a0;font-family:var(--fm);font-size:.64rem">✓ '+items.length+' PRODUCTOS · '+fmtNum(total)+' EN TOTAL</span>'; badge.textContent = '✓ REAL'; badge.className = 'badge b-ok'; }
+  list.innerHTML = items.map(item => {
+    const price = fmtMXN(item.price||0), hasD = item.original_price && item.original_price > item.price, disc = hasD ? Math.round((1 - item.price/item.original_price)*100) : 0, orig = hasD ? fmtMXN(item.original_price) : '';
+    const thumb = (item.thumbnail||'').replace('http://','https://');
+    const img = thumb ? `<img src="${thumb}" onerror="this.parentElement.innerHTML='🛒'">` : '🛒';
+    const fs   = item.shipping?.free_shipping ? '<span class="meli-free">🚚 GRATIS</span>' : '';
+    const sold = item.sold_quantity ? `<span class="meli-sold">${item.sold_quantity} vendidos</span>` : '';
+    const cond = item.condition === 'new' ? '<span class="meli-new">NUEVO</span>' : '<span class="meli-used">USADO</span>';
+    return `<a class="meli-item" href="${item.permalink}" target="_blank" rel="noopener"><div class="meli-img">${img}</div><div class="meli-info"><div class="meli-title">${item.title}</div><div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:.1rem"><span class="meli-price">${price}</span>${hasD?`<span class="meli-orig">${orig}</span><span class="meli-disc">-${disc}%</span>`:''}</div><div class="meli-meta">${fs}${sold}${cond}</div></div></a>`;
+  }).join('');
+  mock ? toast('📦 Modo demo — red bloqueó la API','var(--meli)') : toast('🛒 '+items.length+' productos encontrados','var(--meli)');
+}
+
+/* ════════════════════════════════════════
+   DATABASE
+════════════════════════════════════════ */
+const dbLog = [];
+async function saveUser() {
+  const name = document.getElementById('db-name').value.trim(), email = document.getElementById('db-email').value.trim();
+  if (!name || !email) { toast('⚠ Completa nombre y correo','var(--sms)'); return; }
+  const ld = document.getElementById('db-log');
+  ld.innerHTML = '<div style="text-align:center;padding:.5rem"><span class="spin" style="color:var(--db)"></span></div>';
+  try {
+    const res = await fetch('https://jsonplaceholder.typicode.com/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email, username: name.toLowerCase().replace(' ','_') }) });
+    const d = await res.json();
+    dbLog.unshift({ id: d.id, name, email, time: now() });
+    ld.innerHTML = dbLog.slice(0,4).map(r => `<div class="db-entry"><div><div class="db-name">${r.name}</div><div class="db-meta">${r.email}</div></div><div style="text-align:right"><span class="badge b-ok" style="font-size:.6rem">ID ${r.id}</span><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem;font-family:var(--fm)">${r.time}</div></div></div>`).join('');
+    document.getElementById('db-name').value = ''; document.getElementById('db-email').value = '';
+    toast('✅ Usuario guardado · ID '+d.id,'var(--db)');
+  } catch(e) { ld.innerHTML = '<div style="color:#ff6b8a;font-size:.76rem">Error: '+e.message+'</div>'; }
+}
+
+/* ════════════════════════════════════════
+   SMS
+════════════════════════════════════════ */
+const smsLog = [];
+function sendSMS() {
+  const to = document.getElementById('sms-to').value.trim(), msg = document.getElementById('sms-msg').value.trim();
+  if (!to || !msg) { toast('⚠ Ingresa número y mensaje','var(--sms)'); return; }
+  const ok = Math.random() > .1, st = ok ? 'delivered' : 'failed';
+  smsLog.unshift({ to, msg, st, time: now() });
+  document.getElementById('sms-log').innerHTML = smsLog.slice(0,4).map(x => `<div class="sms-entry"><span class="sms-time">${x.time}</span><div class="sms-msg"><div>${x.msg.substring(0,55)}${x.msg.length>55?'…':''}</div><div style="display:flex;gap:.5rem;margin-top:.18rem"><span style="font-size:.62rem;color:var(--muted2);font-family:var(--fm)">${x.to}</span><span class="badge ${x.st==='delivered'?'b-ok':'b-err'}" style="font-size:.58rem">${x.st.toUpperCase()}</span></div></div></div>`).join('');
+  document.getElementById('sms-msg').value = '';
+  ok ? toast('📨 SMS enviado a '+to,'var(--sms)') : toast('✗ Fallo al enviar','#ff6b8a');
+}
+
+/* ════════════════════════════════════════
+   YOUTUBE
+════════════════════════════════════════ */
+const YT_KEY = 'AIzaSyB_I9YVxTeZ9uxR-zLDAayL2h-h6bCBaeg';
+function looksLikeUrlOrId(s) {
+  if (/https?:\/\//i.test(s)||/youtu\.?be|youtube\.com/i.test(s)||/^www\./i.test(s)) return 'url';
+  if (/^[A-Za-z0-9_\-]{11}$/.test(s)) return 'id';
+  return false;
+}
+function validateVideoName() {
+  const inp = document.getElementById('yt-name'), el = document.getElementById('yt-validation'), raw = inp.value.trim();
+  if (!raw) { inp.classList.remove('ok','er'); el.textContent=''; el.className=''; return true; }
+  const k = looksLikeUrlOrId(raw);
+  if (k==='url') { inp.classList.add('er'); inp.classList.remove('ok'); el.textContent='⚠ Escribe el nombre, no una URL'; el.className='er'; return false; }
+  if (k==='id')  { inp.classList.add('er'); inp.classList.remove('ok'); el.textContent='⚠ Escribe el nombre, no un ID';  el.className='er'; return false; }
+  if (raw.length<3){ inp.classList.add('er'); inp.classList.remove('ok'); el.textContent='⚠ Mínimo 3 caracteres'; el.className='er'; return false; }
+  inp.classList.add('ok'); inp.classList.remove('er'); el.textContent='✓ Nombre válido'; el.className='ok'; return true;
+}
+async function loadVideo() {
+  const inp = document.getElementById('yt-name'), raw = inp.value.trim(), el = document.getElementById('yt-validation');
+  if (!raw) { inp.classList.add('er'); el.textContent='⚠ Escribe el nombre del video'; el.className='er'; return; }
+  if (!validateVideoName()) return;
+  const c = document.getElementById('video-container'), tb = document.getElementById('yt-title-box'), iv = document.getElementById('video-info');
+  c.innerHTML = '<div class="yt-placeholder"><span class="spin" style="color:var(--yt);width:24px;height:24px"></span><span style="font-family:var(--fm);font-size:.7rem">BUSCANDO "'+raw+'"…</span></div>';
+  tb.style.display='none'; iv.style.display='none'; el.textContent=''; el.className='';
+  try {
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(raw)}&key=${YT_KEY}`);
+    const d = await res.json();
+    if (d.error) throw new Error(d.error.message);
+    if (!d.items?.length) throw new Error('Sin resultados para "'+raw+'"');
+    const vid = d.items[0].id.videoId, title = d.items[0].snippet.title;
+    tb.style.display='block'; document.getElementById('yt-title-text').textContent=title;
+    c.innerHTML = `<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&rel=0&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    iv.style.display='block'; document.getElementById('yt-status').innerHTML='<span class="badge b-ok">▶ REPRODUCIENDO</span>';
+    inp.classList.add('ok'); inp.classList.remove('er'); el.textContent='✓ Video encontrado'; el.className='ok';
+    toast('🎬 '+title.substring(0,48),'var(--yt)');
+  } catch(e) {
+    c.innerHTML = '<div class="yt-placeholder"><span style="font-size:2rem">😕</span><span style="color:#ff6b8a;font-family:var(--fm);font-size:.7rem">'+e.message+'</span></div>';
+    tb.style.display='none'; inp.classList.add('er'); inp.classList.remove('ok'); el.textContent='✗ '+e.message; el.className='er';
+    toast('✗ Video no encontrado','#ff6b8a');
+  }
+}
+
+/* ════════════════════════════════════════
+   FACEBOOK
+════════════════════════════════════════ */
+const fbPosts = [
+  { user:'Ana García', avatar:'👩', text:'¡Feliz día a todos! 🌞', likes:142, comments:23, shares:8, time:'Hace 2 h' },
+  { user:'Carlos Ruiz', avatar:'👨', text:'Acabo de lanzar mi nuevo proyecto. ¡Échenle un ojo! 🚀', likes:389, comments:45, shares:31, time:'Hace 5 h' }
+];
+function renderFBFeed() {
+  document.getElementById('fb-feed').innerHTML = fbPosts.slice(0,3).map(p => `<div class="fb-post"><div class="fb-post-head"><div class="fb-post-av">${p.avatar}</div><div><div class="fb-post-name">${p.user}</div><div class="fb-post-time">${p.time}</div></div></div><div class="fb-post-text">${p.text}</div><div class="fb-post-stats"><span>❤️ ${fmtNum(p.likes)}</span><span>💬 ${p.comments}</span><span>↗ ${p.shares}</span></div></div>`).join('');
+}
+function postFacebook() {
+  const msg = document.getElementById('fb-msg').value.trim();
+  if (!msg) { toast('⚠ Escribe algo','var(--fb)'); return; }
+  fbPosts.unshift({ user:'Mi Perfil', avatar:'🧑', text:msg, likes:0, comments:0, shares:0, time:'Justo ahora' });
+  renderFBFeed(); document.getElementById('fb-msg').value='';
+  toast('📘 Publicado en Facebook','var(--fb)');
+}
+renderFBFeed();
+
+/* ════════════════════════════════════════
+   SPOTIFY / iTunes
+════════════════════════════════════════ */
+let spQueue=[], spIdx=-1, spPlaying=false, spTimer=null;
+const spAudio = document.getElementById('sp-audio');
+
+async function searchDeezer() {
+  const q = document.getElementById('sp-query').value.trim(), c = document.getElementById('sp-results'), m = document.getElementById('sp-msg');
+  if (!q) { m.textContent='⚠ Escribe algo para buscar.'; m.className='m-err'; return; }
+  m.innerHTML='<span class="spin" style="color:var(--sp)"></span> Buscando…'; m.className='m-info'; c.innerHTML='';
+
+  const itunesUrl = 'https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&media=music&limit=10&country=mx';
+
+  /* Multiple strategies — iOS Safari sometimes blocks direct fetch to itunes.apple.com
+     when served from a custom domain; proxies act as fallback */
+  const strategies = [
+    async () => {
+      const r = await fetch(itunesUrl, { mode: 'cors' });
+      if (!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    },
+    async () => {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(itunesUrl));
+      if (!r.ok) throw new Error('proxy1 '+r.status);
+      const b = await r.json();
+      if (!b.contents) throw new Error('proxy1 empty');
+      return JSON.parse(b.contents);
+    },
+    async () => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(itunesUrl));
+      if (!r.ok) throw new Error('proxy2 '+r.status);
+      return r.json();
+    },
+    async () => {
+      const r = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(itunesUrl));
+      if (!r.ok) throw new Error('proxy3 '+r.status);
+      return r.json();
+    },
+  ];
+
+  let data = null;
+  for (let i = 0; i < strategies.length; i++) {
+    m.innerHTML = `<span class="spin" style="color:var(--sp)"></span> <span style="color:var(--muted2);font-family:var(--fm);font-size:.64rem">Intento ${i+1}/${strategies.length}…</span>`;
+    try {
+      const res = await Promise.race([strategies[i](), new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000))]);
+      if (res && (res.results !== undefined)) { data = res; break; }
+    } catch(e) { /* try next */ }
+  }
+
+  if (!data || !data.results) {
+    m.textContent = '✗ No se pudo conectar con iTunes. Revisa tu conexión.';
+    m.className = 'm-err';
+    document.getElementById('sp-api-badge').textContent = '✗ ERROR';
+    document.getElementById('sp-api-badge').className = 'badge b-err';
+    return;
+  }
+
+  const raw = data.results || [];
+  if (!raw.length) { m.textContent='Sin resultados para "'+q+'".'; m.className='m-err'; return; }
+
+  spQueue = raw.map(t => ({
+    title:   t.trackName || t.collectionName || '–',
+    artist:  { name: t.artistName || '–' },
+    album:   { title: t.collectionName || '', cover_small: t.artworkUrl60 || '', cover_medium: t.artworkUrl100 || '' },
+    preview: t.previewUrl || null,
+    duration: t.trackTimeMillis ? Math.round(t.trackTimeMillis / 1000) : 30
+  }));
+
+  const pc = spQueue.filter(t => t.preview).length;
+  m.textContent = spQueue.length + ' canciones · ' + pc + ' con preview';
+  m.className = 'm-ok';
+  document.getElementById('sp-api-badge').textContent = '✓ iTunes';
+  document.getElementById('sp-api-badge').className = 'badge b-sp';
+
+  c.innerHTML = spQueue.map((t, i) => {
+    const hp = !!t.preview, dur = spFmt(t.duration || 30), img = t.album?.cover_small || '';
+    return `<div class="sp-track-card" id="tc-${i}" onclick="spPlay(${i})"><div class="sp-cover">${img ? `<img src="${img}" onerror="this.parentElement.innerHTML='🎵'">` : '🎵'}</div><div style="flex:1;min-width:0"><div class="sp-tname">${t.title}</div><div class="sp-tartist">${t.artist.name}</div>${hp ? '<span class="sp-preview">▶ 30s</span>' : '<span class="sp-no-preview">SIN PREVIEW</span>'}</div><div style="color:${hp?'var(--sp)':'var(--muted)'};font-size:.67rem;white-space:nowrap;margin-left:auto;flex-shrink:0;font-family:var(--fm)">${dur}</div></div>`;
+  }).join('');
+
+  const fi = spQueue.findIndex(t => t.preview);
+  if (fi !== -1) spPlay(fi);
+  toast('🎵 ' + spQueue.length + ' resultados · ' + pc + ' reproducibles', 'var(--sp)');
+}
+function spPlay(idx) {
+  const t = spQueue[idx]; if (!t) return; spIdx=idx;
+  document.querySelectorAll('.sp-track-card').forEach(e => e.classList.remove('active'));
+  const el = document.getElementById('tc-'+idx); if (el) { el.classList.add('active'); el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  document.getElementById('sp-track-name').textContent   = t.title||'–';
+  document.getElementById('sp-track-artist').textContent = t.artist?.name||'–';
+  document.getElementById('sp-track-album').textContent  = t.album?.title||'';
+  const cw = document.getElementById('sp-cover-wrap'), img = t.album?.cover_medium||t.album?.cover_small||'';
+  cw.innerHTML = img ? `<img src="${img}" onerror="this.parentElement.innerHTML='🎵'">` : '<span>🎵</span>';
+  if (!t.preview) { spStopTimer(); spPlaying=false; document.getElementById('sp-play-btn').textContent='▶'; document.getElementById('sp-np-status').textContent='Sin preview'; document.getElementById('sp-eq').classList.add('paused'); document.getElementById('sp-progress').style.width='0%'; document.getElementById('sp-elapsed').textContent='0:00'; document.getElementById('sp-duration').textContent=spFmt(t.duration||30); spAudio.pause(); return; }
+  spAudio.src = t.preview; spAudio.volume = parseFloat(document.getElementById('sp-volume').value); spAudio.load();
+  const p = spAudio.play();
+  if (p !== undefined) { p.then(() => { spPlaying=true; document.getElementById('sp-play-btn').textContent='⏸'; document.getElementById('sp-np-status').textContent='Reproduciendo ahora'; document.getElementById('sp-eq').classList.remove('paused'); spStartTimer(); }).catch(() => { document.getElementById('sp-msg').textContent='▶ Haz clic en ▶ para reproducir'; document.getElementById('sp-msg').className='m-info'; }); }
+}
+function spStartTimer() { spStopTimer(); spTimer = setInterval(() => { if (spAudio.paused) return; const dur = spAudio.duration||30; document.getElementById('sp-progress').style.width=((spAudio.currentTime/dur)*100)+'%'; document.getElementById('sp-elapsed').textContent=spFmt(spAudio.currentTime); document.getElementById('sp-duration').textContent=spFmt(dur); }, 400); }
+function spStopTimer() { clearInterval(spTimer); }
+function spTogglePlay() {
+  if (!spAudio.src || spAudio.src===window.location.href) return;
+  if (spAudio.paused) { spAudio.play().then(() => { spPlaying=true; document.getElementById('sp-play-btn').textContent='⏸'; document.getElementById('sp-np-status').textContent='Reproduciendo ahora'; document.getElementById('sp-eq').classList.remove('paused'); spStartTimer(); }); }
+  else { spAudio.pause(); spPlaying=false; document.getElementById('sp-play-btn').textContent='▶'; document.getElementById('sp-np-status').textContent='Pausado'; document.getElementById('sp-eq').classList.add('paused'); }
+}
+function spNext() { let n=spIdx+1; while(n<spQueue.length && !spQueue[n].preview) n++; if(n<spQueue.length) spPlay(n); }
+function spPrev() { let p=spIdx-1; while(p>=0 && !spQueue[p].preview) p--; if(p>=0) spPlay(p); }
+function spSetVolume(v) { spAudio.volume=parseFloat(v); }
+spAudio.addEventListener('ended', spNext);
+function spFmt(s) { if(isNaN(s)||s<0) return '0:00'; return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+</script>
+</body>
+</html>
